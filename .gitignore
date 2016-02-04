@@ -1,0 +1,110 @@
+var mongo = require('mongodb');
+ 
+var Server = mongo.Server,
+    Db = mongo.Db,
+    BSON = mongo.BSONPure;
+ 
+var server = new Server('127.0.0.1', 27017, {auto_reconnect: true});
+db = new Db('trello', server);
+ 
+db.open(function(err, db) {
+    if(!err) {
+        console.log("Connected to 'cardsdb' database");
+        db.collection('data', {strict:true}, function(err, collection) {
+            if (err) {
+                console.log("Collection not exist");
+                PouplateDB();
+            }
+        });
+    }
+});
+ 
+exports.findById = function(req, res) {
+    var id = req.params.id;
+    console.log('Retrieving all cards: ' + id);
+    db.collection('data', function(err, collection) {
+        collection.findOne({'_id':new BSON.ObjectID(id)}, function(err, item) {
+            res.send(item);
+        });
+    });
+};
+ 
+exports.findAll = function(req, res) {
+    db.collection('data', function(err, collection) {
+		if (err) {
+                console.log("The 'data' collection doesn't exist. Creating it with sample data...");
+                populateDB();
+            }
+        collection.find().toArray(function(err, items) {
+            res.json(items);
+        });
+    });
+};
+ 
+exports.addcards = function(req, res) {
+    var cards = req.body;
+    console.log('addind list: ' + JSON.stringify(cards));
+    db.collection('data', function(err, collection) {
+        collection.insert(cards, {safe:true}, function(err, result) {
+            if (err) {
+                res.send({'error':'An error has occurred' +err});
+            } else {
+                console.log('Success: ' + JSON.stringify(result[0]));
+                res.send(result[0]);
+            }
+        });
+    });
+}
+ 
+exports.UpdateById = function(req, res) {
+    var id = req.params.id;
+    var cards = req.body;
+    console.log('Updating cards: ' + id);
+    console.log(JSON.stringify(cards));
+    db.collection('data', function(err, collection) {
+        collection.update({'_id':new BSON.ObjectID(id)}, cards, {safe:true}, function(err, result) {
+            if (err) {
+                console.log('Error updating cards: ' + err);
+                res.send({'error':'An error has occurred'});
+            } else {
+                console.log('' + result + ' document(s) updated');
+                res.json(cards);
+            }
+        });
+    });
+}
+ 
+exports.deletecards = function(req, res) {
+    var id = req.params.id;
+    console.log('Deleting cards: ' + id);
+    db.collection('data', function(err, collection) {
+        collection.remove({'_id':new BSON.ObjectID(id)}, {safe:true}, function(err, result) {
+            if (err) {
+                res.send({'error':'An error has occurred - ' + err});
+            } else {
+                console.log('' + result + ' document(s) deleted');
+                res.json('' + result + 'document(s) deleted');
+            }
+        });
+    });
+}
+ 
+var PouplateDB = function() {
+ 
+    var wines = [
+    {
+        "list_name": "bobba",
+        "card_name": {
+			"card_name": "Meeting",
+			"text_data" : "Your meeting at 10 AM"
+			
+		}
+		
+    }];
+ 
+    db.collection('data', function(err, collection) {
+        collection.insert(data, {safe:true}, function(err, result) {});
+    });
+ 
+};
+
