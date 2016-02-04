@@ -108,3 +108,28 @@ var PouplateDB = function() {
  
 };
 
+
+Other file which calles the request 
+
+
+var express = require('express'),
+    card = require('./routes/cards');
+ 
+var app = express();
+ 
+app.configure(function () {
+    app.use(express.logger('dev'));     /* 'default', 'short', 'tiny', 'dev' */
+    app.use(express.bodyParser());
+});
+ 
+app.get('/FindAllCard', card.findAll);
+app.post('/createList',card.addcards);
+app.delete('/delete/:id',card.deletecards);
+app.get('/findbyid/:id', card.findById);
+app.put('/update/:id', card.UpdateById);
+ 
+app.listen(3000);
+console.log('Listening on port 3000...');
+
+
+
